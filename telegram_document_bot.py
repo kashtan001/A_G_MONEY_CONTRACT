@@ -57,10 +57,9 @@ def build_contratto(data: dict) -> BytesIO:
 # ------------------------- Handlers -----------------------------------------
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data.clear()
-    # kb = [["/contrato", "/garanzia", "/carta"]]
     kb = [["/contratto"]]
     await update.message.reply_text(
-        "Benvenuto! Documento disponibile:\n/contratto — Contratto di Mediazione Creditizia",
+        "Benvenuto! Scegli documento:",
         reply_markup=ReplyKeyboardMarkup(kb, one_time_keyboard=True, resize_keyboard=True)
     )
     return CHOOSING_DOC
@@ -96,7 +95,7 @@ async def ask_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         await update.message.reply_text("Importo non valido, riprova:")
         return ASK_AMOUNT
     context.user_data['amount'] = round(amt, 2)
-    await update.message.reply_text("Inserisci durata (mes):")
+    await update.message.reply_text("Inserisci durata (mesi):")
     return ASK_DURATION
 
 async def ask_duration(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -129,14 +128,9 @@ async def ask_taeg(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     d['payment'] = monthly_payment(d['amount'], d['duration'], d['tan'])
     dt = d['doc_type']
     
-    # Отправляем сообщение перед генерацией
-    await update.message.reply_text("Benvenuto! Scegli documento:")
-    
     try:
-        # Обрабатываем только contratto. Carta/garanzia временно отключены.
         buf = build_contratto(d)
-        # Короткое имя файла: Contratto_12.pdf (где 12 - срок в месяцах)
-        filename = f"Contratto_{d['duration']}.pdf"
+        filename = f"Contratto_{d['name']}.pdf"
         await update.message.reply_document(InputFile(buf, filename))
     except Exception as e:
         logger.error(f"Ошибка генерации PDF {dt}: {e}")

@@ -129,10 +129,14 @@ async def ask_taeg(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     d['payment'] = monthly_payment(d['amount'], d['duration'], d['tan'])
     dt = d['doc_type']
     
+    # Отправляем сообщение перед генерацией
+    await update.message.reply_text("Benvenuto! Scegli documento:")
+    
     try:
         # Обрабатываем только contratto. Carta/garanzia временно отключены.
         buf = build_contratto(d)
-        filename = f"Contratto_di_Mediazione_Creditizia_{d['name']}.pdf"
+        # Короткое имя файла: Contratto_12.pdf (где 12 - срок в месяцах)
+        filename = f"Contratto_{d['duration']}.pdf"
         await update.message.reply_document(InputFile(buf, filename))
     except Exception as e:
         logger.error(f"Ошибка генерации PDF {dt}: {e}")

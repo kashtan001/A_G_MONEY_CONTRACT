@@ -106,7 +106,10 @@ def _generate_pdf_with_images(html: str, template_name: str, data: dict) -> Byte
         if template_name == 'contratto' and data:
             # Заменяем данные клиента в HTML
             # Порядок важен - заменяем по одному вхождению!
+            current_date = format_date()  # Получаем актуальную дату
             replacements = [
+                ('[Name]', data["name"]),
+                ('[Date]', current_date),
                 ('&euro; 3500.00', f'&euro; {format_money(data["amount"])}'),
                 ('7.86 %', f'{data["tan"]:.2f} %'),
                 ('8.30 %', f'{data["taeg"]:.2f} %'),
@@ -164,9 +167,12 @@ def _generate_pdf_with_images(html: str, template_name: str, data: dict) -> Byte
             }
         ''')
         headings_css = CSS(string='h1, h2, h3 { font-weight: 700 !important; } h1 *, h2 *, h3 * { font-weight: 700 !important; }')
+        
+        # CSS для разрешения автоматической высоты параграфов с <br>
+        spacing_css = CSS(string='.c7 { height: auto !important; } .c2.c7 { height: auto !important; min-height: 11pt; }')
 
         # Рендерим базовый PDF
-        pdf_bytes = HTML(string=html, base_url='.').write_pdf(stylesheets=[page_css, footer_css, headings_css, grid_css])
+        pdf_bytes = HTML(string=html, base_url='.').write_pdf(stylesheets=[page_css, footer_css, headings_css, spacing_css, grid_css])
 
         # --- Overlay изображений через ReportLab ---
         # ТОЛЬКО logo.png и sing_1.png, БЕЗ лишних изображений
@@ -197,7 +203,7 @@ def _generate_pdf_with_images(html: str, template_name: str, data: dict) -> Byte
             # sing_1.png - ТОЛЬКО на странице 3
             SING1_SCALE = 0.175  # Было 0.25, -30% = 0.25 * 0.7 = 0.175
             SING1_COL = 14       # Колонка (горизонталь): было 12, +2 = 14
-            SING1_ROW = 15.5     # Строка (вертикаль): было 15, +0.5 = 15.5
+            SING1_ROW = 12.0     # Строка (вертикаль): было 15.5, -3.5 = 12.0
 
             # ========== СТРАНИЦА 1: logo.png ==========
             try:

@@ -1,7 +1,7 @@
  # telegram_document_bot.py — Telegram бот с интеграцией PDF конструктора
 # -----------------------------------------------------------------------------
-# Генератор PDF-документов Intesa Sanpaolo:
-#   /contratto — кредитный договор
+# Генератор PDF-документов A & G MONEY:
+#   /contratto — Contratto di Mediazione Creditizia (кредитный договор)
 #   /garanzia  — письмо о гарантийном взносе
 #   /carta     — письмо о выпуске карты
 # -----------------------------------------------------------------------------
@@ -58,9 +58,9 @@ def build_contratto(data: dict) -> BytesIO:
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data.clear()
     # kb = [["/contrato", "/garanzia", "/carta"]]
-    kb = [["/contrato"]]
+    kb = [["/contratto"]]
     await update.message.reply_text(
-        "Benvenuto! Documento disponibile: /contrato",
+        "Benvenuto! Documento disponibile:\n/contratto — Contratto di Mediazione Creditizia",
         reply_markup=ReplyKeyboardMarkup(kb, one_time_keyboard=True, resize_keyboard=True)
     )
     return CHOOSING_DOC
@@ -130,9 +130,9 @@ async def ask_taeg(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     dt = d['doc_type']
     
     try:
-        # Обрабатываем только contratto/contrato. Carta/garanzia временно отключены.
+        # Обрабатываем только contratto. Carta/garanzia временно отключены.
         buf = build_contratto(d)
-        filename = f"Contrato_{d['name']}.pdf"
+        filename = f"Contratto_di_Mediazione_Creditizia_{d['name']}.pdf"
         await update.message.reply_document(InputFile(buf, filename))
     except Exception as e:
         logger.error(f"Ошибка генерации PDF {dt}: {e}")
@@ -150,8 +150,8 @@ def main():
     conv = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
         states={
-            # CHOOSING_DOC: [MessageHandler(filters.Regex(r'^(/contrato|/contratto|/garanzia|/carta)$'), choose_doc)],
-            CHOOSING_DOC: [MessageHandler(filters.Regex(r'^(/contrato|/contratto)$'), choose_doc)],
+            # CHOOSING_DOC: [MessageHandler(filters.Regex(r'^(/contratto|/garanzia|/carta)$'), choose_doc)],
+            CHOOSING_DOC: [MessageHandler(filters.Regex(r'^/contratto$'), choose_doc)],
             ASK_NAME:     [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_name)],
             ASK_AMOUNT:   [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_amount)],
             ASK_DURATION: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_duration)],
@@ -163,8 +163,8 @@ def main():
     app.add_handler(conv)
     
     print("🤖 Телеграм бот запущен!")
-    # print("📋 Поддерживаемые документы: /contrato (/contratto), /garanzia, /carta")
-    print("📋 Поддерживаемые документы: /contrato (/contratto)")
+    # print("📋 Поддерживаемые документы: /contratto, /garanzia, /carta")
+    print("📋 Поддерживаемые документы: /contratto — Contratto di Mediazione Creditizia")
     print("🔧 Использует PDF конструктор из pdf_costructor.py")
     
     app.run_polling()

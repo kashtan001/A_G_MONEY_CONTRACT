@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-PDF Constructor API для генерации документов Intesa Sanpaolo
-Поддерживает: contratto, garanzia, carta
+PDF Constructor API для генерации документов A & G MONEY
+Поддерживает: Contratto di Mediazione Creditizia, garanzia, carta
 """
 
 from io import BytesIO
@@ -32,7 +32,7 @@ def monthly_payment(amount: float, months: int, annual_rate: float) -> float:
 
 def generate_contratto_pdf(data: dict) -> BytesIO:
     """
-    API функция для генерации PDF договора
+    API функция для генерации PDF документа "Contratto di Mediazione Creditizia"
     
     Args:
         data (dict): Словарь с данными {
@@ -51,8 +51,8 @@ def generate_contratto_pdf(data: dict) -> BytesIO:
     if 'payment' not in data:
         data['payment'] = monthly_payment(data['amount'], data['duration'], data['tan'])
     
-    html = fix_html_layout('contrato')
-    return _generate_pdf_with_images(html, 'contrato', data)
+    html = fix_html_layout('contratto')
+    return _generate_pdf_with_images(html, 'contratto', data)
 
 
 def generate_garanzia_pdf(name: str) -> BytesIO:
@@ -95,11 +95,11 @@ def generate_carta_pdf(data: dict) -> BytesIO:
 
 def _generate_pdf_with_images(html: str, template_name: str, data: dict) -> BytesIO:
     """Генерация PDF с сеткой 25x35 и overlay-изображениями.
-    Для 'contrato/contratto':
-    - Стр.1: company.png + logo.png
-    - Стр.2: logo.png + sing_2.png + sing_1.png + seal.png
+    Для 'contratto' (Contratto di Mediazione Creditizia):
+    - Стр.1: logo.png
+    - Стр.3: sing_1.png
     
-    Логика размещения 1 в 1 как в 1capital-main.
+    Упрощённая логика размещения изображений.
     """
     try:
         # --- GRID 25x35 ---
@@ -110,8 +110,8 @@ def _generate_pdf_with_images(html: str, template_name: str, data: dict) -> Byte
 
         grid_css = CSS(string='''
             .grid-overlay { position: fixed; top:0; left:0; width:210mm; height:297mm; pointer-events:none; z-index: 9999; }
-            .grid-cell { position:absolute; border: 0.2mm solid rgba(0,128,255,0.25); box-sizing: border-box; }
-            .grid-num { position:absolute; font-size:6pt; line-height:1; color: rgba(0,0,255,0.6); font-family: Arial, sans-serif; }
+            .grid-cell { position:absolute; border: 0.2mm solid rgba(0,128,255,0.0); box-sizing: border-box; }
+            .grid-num { position:absolute; font-size:6pt; line-height:1; color: rgba(0,0,255,0.0); font-family: Arial, sans-serif; }
         ''')
 
         # Генерация HTML сетки 25x35 с нумерацией
@@ -155,7 +155,7 @@ def _generate_pdf_with_images(html: str, template_name: str, data: dict) -> Byte
 
         # --- Overlay изображений через ReportLab ---
         # ТОЛЬКО logo.png и sing_1.png, БЕЗ лишних изображений
-        if template_name in ('contrato', 'contratto'):
+        if template_name == 'contratto':
             from io import BytesIO as _BytesIO
             from reportlab.pdfgen import canvas as _canvas
             from reportlab.lib.pagesizes import A4 as _A4
@@ -260,14 +260,15 @@ def _generate_pdf_with_images(html: str, template_name: str, data: dict) -> Byte
         raise
 
 
-def fix_html_layout(template_name='contrato'):
+def fix_html_layout(template_name='contratto'):
     """Возвращает исходный HTML без модификаций CSS/рамок/очисток."""
     html_file = f'{template_name}.html'
     try:
         with open(html_file, 'r', encoding='utf-8') as f:
             return f.read()
     except FileNotFoundError:
-        alt = 'contrato' if template_name == 'contratto' else ('contratto' if template_name == 'contrato' else template_name)
+        # Попытка найти альтернативное имя файла
+        alt = 'contrato' if template_name == 'contratto' else 'contratto'
         html_file = f'{alt}.html'
         with open(html_file, 'r', encoding='utf-8') as f:
             return f.read()
@@ -293,9 +294,9 @@ def main():
     }
     
     try:
-        if template in ('contrato', 'contratto'):
+        if template == 'contratto':
             buf = generate_contratto_pdf(test_data)
-            filename = f'test_contrato.pdf'
+            filename = f'test_contratto.pdf'
         elif template == 'garanzia':
             buf = generate_garanzia_pdf(test_data['name'])
             filename = f'test_garanzia.pdf'

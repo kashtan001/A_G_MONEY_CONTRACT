@@ -102,6 +102,21 @@ def _generate_pdf_with_images(html: str, template_name: str, data: dict) -> Byte
     Упрощённая логика размещения изображений.
     """
     try:
+        # --- Замена данных в HTML ---
+        if template_name == 'contratto' and data:
+            # Заменяем данные клиента в HTML
+            # Порядок важен - заменяем по одному вхождению!
+            replacements = [
+                ('&euro; 3500.00', f'&euro; {format_money(data["amount"])}'),
+                ('7.86 %', f'{data["tan"]:.2f} %'),
+                ('8.30 %', f'{data["taeg"]:.2f} %'),
+                ('48 mesi', f'{data["duration"]} mesi'),
+                ('&euro; 85.22', f'&euro; {format_money(data["payment"])}'),
+            ]
+            
+            for old, new in replacements:
+                html = html.replace(old, new, 1)  # Заменяем только первое вхождение
+        
         # --- GRID 25x35 ---
         page_w_mm = 210
         page_h_mm = 297
